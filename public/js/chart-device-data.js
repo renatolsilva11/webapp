@@ -1,3 +1,5 @@
+
+
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-undef */
@@ -12,27 +14,51 @@ $(document).ready(() => {
       this.deviceId = deviceId;
       this.maxLen = 50;
       this.timeData = new Array(this.maxLen);
-      this.temperatureData = new Array(this.maxLen);
-      this.humidityData = new Array(this.maxLen);
+      this.Sns1Data = new Array(this.maxLen);
+      this.Sns2Data = new Array(this.maxLen);
+      this.Sns3Data = new Array(this.maxLen);
+      
     }
 
-    addData(time, temperature, humidity) {
+    addData(time, Sensor_1, Sensor_2, Sensor_3) {
       this.timeData.push(time);
-      this.temperatureData.push(temperature);
-      this.humidityData.push(humidity || null);
-
+      this.Sns1Data.push(Sensor_1);
+      this.Sns2Data.push(Sensor_2);
+      this.Sns3Data.push(Sensor_3);
+      let data;
+      for(let i = 0; i <= 50; i++) {
+        data = document.getElementById("s1").textContent = this.Sns1Data[i];
+        data = document.getElementById("s2").textContent = this.Sns2Data[i];
+        data = document.getElementById("s3").textContent = this.Sns3Data[i];
+        
+      }
+      
+      /* if(this.Sns1Data <= 45) {
+        document.getElementById("msg1").textContent = "CUIDADO! PRÓXIMO DE BATER";
+      }
+      else document.getElementById("msg1").textContent = ""; */
+      
+      
+      
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
-        this.temperatureData.shift();
-        this.humidityData.shift();
+        this.Sns1Data.shift();
+        this.Sns2Data.shift();
+        this.Sns3Data.shift();
       }
+      
+      
     }
+   
+    
   }
+  
 
   // All the devices in the list (those that have been sending telemetry)
   class TrackedDevices {
     constructor() {
       this.devices = [];
+      
     }
 
     // Find a device based on its Id
@@ -46,11 +72,15 @@ $(document).ready(() => {
       return undefined;
     }
 
+
     getDevicesCount() {
+      
       return this.devices.length;
     }
+    
   }
 
+  
   const trackedDevices = new TrackedDevices();
 
   // Define the chart axes
@@ -58,8 +88,8 @@ $(document).ready(() => {
     datasets: [
       {
         fill: false,
-        label: 'Temperature',
-        yAxisID: 'Temperature',
+        label: 'Sensor_1',
+        yAxisID: 'Sensor_1',
         borderColor: 'rgba(255, 204, 0, 1)',
         pointBoarderColor: 'rgba(255, 204, 0, 1)',
         backgroundColor: 'rgba(255, 204, 0, 0.4)',
@@ -69,13 +99,24 @@ $(document).ready(() => {
       },
       {
         fill: false,
-        label: 'Humidity',
-        yAxisID: 'Humidity',
+        label: 'Sensor_2',
+        yAxisID: 'Sensor_2',
         borderColor: 'rgba(24, 120, 240, 1)',
         pointBoarderColor: 'rgba(24, 120, 240, 1)',
         backgroundColor: 'rgba(24, 120, 240, 0.4)',
         pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
         pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
+        spanGaps: true,
+      },
+      {
+        fill: false,
+        label: 'Sensor_3',
+        yAxisID: 'Sensor_3',
+        borderColor: 'rgba(255, 0, 0, 1)',
+        pointBoarderColor: 'rgba(255, 0, 0, 1)',
+        backgroundColor: 'rgba(255, 0, 0, 0.4)',
+        pointHoverBackgroundColor: 'rgba(255, 0, 0, 1)',
+        pointHoverBorderColor: 'rgba(255, 0, 0, 1)',
         spanGaps: true,
       }
     ]
@@ -84,35 +125,45 @@ $(document).ready(() => {
   const chartOptions = {
     scales: {
       yAxes: [{
-        id: 'Temperature',
+        id: 'Sensor_1',
         type: 'linear',
         scaleLabel: {
-          labelString: 'Temperature (ºC)',
+          labelString: 'Sensor 1 (cm)',
           display: true,
         },
         position: 'left',
       },
       {
-        id: 'Humidity',
+        id: 'Sensor_2',
         type: 'linear',
         scaleLabel: {
-          labelString: 'Humidity (%)',
+          labelString: 'Sensor 2 (cm)',
           display: true,
         },
         position: 'right',
-      }]
+      },
+      {
+        id: 'Sensor_3',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'Sensor 3 (cm)',
+          display: true,
+        },
+        position: 'left',
+      }
+    ]
     }
   };
 
   // Get the context of the canvas element we want to select
-  const ctx = document.getElementById('iotChart').getContext('2d');
-  const myLineChart = new Chart(
+  /* const ctx = document.getElementById('iotChart').getContext('2d'); */
+  /* const myLineChart = new Chart(
     ctx,
     {
       type: 'line',
       data: chartData,
       options: chartOptions,
-    });
+    }); */
 
   // Manage a list of devices in the UI, and update which device data the chart is showing
   // based on selection
@@ -122,9 +173,10 @@ $(document).ready(() => {
   function OnSelectionChange() {
     const device = trackedDevices.findDevice(listOfDevices[listOfDevices.selectedIndex].text);
     chartData.labels = device.timeData;
-    chartData.datasets[0].data = device.temperatureData;
-    chartData.datasets[1].data = device.humidityData;
-    myLineChart.update();
+    chartData.datasets[0].data = device.Sns1Data;
+    chartData.datasets[1].data = device.Sns2Data;
+    chartData.datasets[2].data = device.Sns3Data;
+   /*  myLineChart.update(); */
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
 
@@ -140,21 +192,22 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.IotData.temperature && !messageData.IotData.humidity)) {
+      if (!messageData.MessageDate || (!messageData.IotData.Sensor_1 && !messageData.IotData.Sensor_2 && !messageData.IotData.Sensor_3)) {
         return;
       }
 
       // find or add device to list of tracked devices
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
+      console.log(existingDeviceData);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.Sensor_1, messageData.IotData.Sensor_2, messageData.IotData.Sensor_3);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
-        deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        deviceCount.innerText = numDevices === 1 ? `${numDevices} Dispositivo` : `${numDevices} Dispositivos`;
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.Sensor_1, messageData.IotData.Sensor_2, messageData.IotData.Sensor_3);
 
         // add device to the UI list
         const node = document.createElement('option');
@@ -170,9 +223,11 @@ $(document).ready(() => {
         }
       }
 
-      myLineChart.update();
+      /* myLineChart.update(); */
     } catch (err) {
       console.error(err);
     }
   };
+
+  
 });
